@@ -86,11 +86,10 @@ class QLearningAgent(ReinforcementAgent):
         """
         # Pick Action
         legalActions = self.getLegalActions(state)
-        action = None
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
-        return action
+        return None
 
     def update(self, state, action, nextState, reward):
         """
@@ -183,4 +182,3 @@ class ApproximateQAgent(PacmanQAgent):
         if self.episodesSoFar == self.numTraining:
             # you might want to print your weights here for debugging
             "*** YOUR CODE HERE ***"
-            pass

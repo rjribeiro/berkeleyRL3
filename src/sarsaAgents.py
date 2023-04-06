@@ -97,11 +97,10 @@ class SarsaAgent(ReinforcementAgent):
         """
         # Pick Action
         legalActions = self.getLegalActions(state)
-        action = None
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
-        return action
+        return None
 
     def getAction(self, state):
         """
@@ -202,4 +201,3 @@ class ApproximateSarsaAgent(PacmanSarsaAgent):
         if self.episodesSoFar == self.numTraining:
             # you might want to print your weights here for debugging
             "*** YOUR CODE HERE ***"
-            pass
