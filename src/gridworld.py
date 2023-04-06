@@ -89,9 +89,7 @@ class Gridworld(mdp.MarkovDecisionProcess):
             return 0.0
         x, y = state
         cell = self.grid[x][y]
-        if type(cell) == int or type(cell) == float:
-            return cell
-        return self.livingReward
+        return cell if type(cell) in [int, float] else self.livingReward
 
     def getStartState(self):
         for x in range(self.grid.width):
@@ -127,54 +125,46 @@ class Gridworld(mdp.MarkovDecisionProcess):
 
         x, y = state
 
-        if type(self.grid[x][y]) == int or type(self.grid[x][y]) == float:
+        if type(self.grid[x][y]) in [int, float]:
             termState = self.grid.terminalState
             return [(termState, 1.0)]
 
         successors = []
 
-        northState = (self.__isAllowed(y+1,x) and (x,y+1)) or state
-        westState = (self.__isAllowed(y,x-1) and (x-1,y)) or state
-        southState = (self.__isAllowed(y-1,x) and (x,y-1)) or state
-        eastState = (self.__isAllowed(y,x+1) and (x+1,y)) or state
+        northState = (x, y+1) if self.__isAllowed(y+1,x) else state
+        westState = (x-1, y) if self.__isAllowed(y,x-1) else state
+        southState = (x, y-1) if self.__isAllowed(y-1,x) else state
+        eastState = (x+1, y) if self.__isAllowed(y,x+1) else state
 
-        if action == 'north' or action == 'south':
-            if action == 'north':
-                successors.append((northState,1-self.noise))
-            else:
-                successors.append((southState,1-self.noise))
+        if action == 'east':
+            successors.append((eastState,1-self.noise))
 
             massLeft = self.noise
-            successors.append((westState,massLeft/2.0))
-            successors.append((eastState,massLeft/2.0))
-
-        if action == 'west' or action == 'east':
-            if action == 'west':
-                successors.append((westState,1-self.noise))
-            else:
-                successors.append((eastState,1-self.noise))
+            successors.extend(((northState, massLeft/2.0), (southState, massLeft/2.0)))
+        elif action == 'north':
+            successors.append((northState,1-self.noise))
+            massLeft = self.noise
+            successors.extend(((westState, massLeft/2.0), (eastState, massLeft/2.0)))
+        elif action == 'south':
+            successors.append((southState,1-self.noise))
 
             massLeft = self.noise
-            successors.append((northState,massLeft/2.0))
-            successors.append((southState,massLeft/2.0))
-
-        successors = self.__aggregate(successors)
-
-        return successors
+            successors.extend(((westState, massLeft/2.0), (eastState, massLeft/2.0)))
+        elif action == 'west':
+            successors.append((westState,1-self.noise))
+            massLeft = self.noise
+            successors.extend(((northState, massLeft/2.0), (southState, massLeft/2.0)))
+        return self.__aggregate(successors)
 
     def __aggregate(self, statesAndProbs):
         counter = util.Counter()
         for state, prob in statesAndProbs:
             counter[state] += prob
-        newStatesAndProbs = []
-        for state, prob in list(counter.items()):
-            newStatesAndProbs.append((state, prob))
-        return newStatesAndProbs
+        return list(list(counter.items()))
 
     def __isAllowed(self, y, x):
         if y < 0 or y >= self.grid.height: return False
-        if x < 0 or x >= self.grid.width: return False
-        return self.grid[x][y] != '#'
+        return False if x < 0 or x >= self.grid.width else self.grid[x][y] != '#'
 
 class GridworldEnvironment(environment.Environment):
 
@@ -196,10 +186,7 @@ class GridworldEnvironment(environment.Environment):
 
     def getRandomNextState(self, state, action, randObj=None):
         rand = -1.0
-        if randObj is None:
-            rand = random.random()
-        else:
-            rand = randObj.random()
+        rand = random.random() if randObj is None else randObj.random()
         sum = 0.0
         successors = self.gridWorld.getTransitionStatesAndProbs(state, action)
         for nextState, prob in successors:
@@ -225,7 +212,7 @@ class Grid:
     def __init__(self, width, height, initialValue=' '):
         self.width = width
         self.height = height
-        self.data = [[initialValue for y in range(height)] for x in range(width)]
+        self.data = [[initialValue for _ in range(height)] for _ in range(width)]
         self.terminalState = 'TERMINAL_STATE'
 
     def __getitem__(self, i):
@@ -235,8 +222,7 @@ class Grid:
         self.data[key] = item
 
     def __eq__(self, other):
-        if other == None: return False
-        return self.data == other.data
+        return False if other == None else self.data == other.data
 
     def __hash__(self):
         return hash(self.data)
@@ -339,7 +325,7 @@ def getUserAction(state, actionFunction):
         if 'Left' in keys: action = 'west'
         if 'Right' in keys: action = 'east'
         if 'q' in keys: sys.exit(0)
-        if action == None: continue
+        if action is None: continue
         break
     actions = actionFunction(state)
     if action not in actions:
@@ -353,7 +339,7 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
     totalDiscount = 1.0
     environment.reset()
     if 'startEpisode' in dir(agent): agent.startEpisode()
-    message("BEGINNING EPISODE: "+str(episode)+"\n")
+    message(f"BEGINNING EPISODE: {str(episode)}" + "\n")
     while True:
 
         # DISPLAY CURRENT STATE
@@ -364,20 +350,31 @@ def runEpisode(agent, environment, discount, decision, display, message, pause, 
         # END IF IN A TERMINAL STATE
         actions = environment.getPossibleActions(state)
         if len(actions) == 0:
-            message("EPISODE "+str(episode)+" COMPLETE: RETURN WAS "+str(returns)+"\n")
+            message(f"EPISODE {str(episode)} COMPLETE: RETURN WAS {str(returns)}" + "\n")
             return returns
 
         # GET ACTION (USUALLY FROM AGENT)
         action = decision(state)
-        if action == None:
+        if action is None:
             raise Exception( 'Error: Agent returned None action')
 
         # EXECUTE ACTION
         nextState, reward = environment.doAction(action)
-        message("Started in state: "+str(state)+
-                "\nTook action: "+str(action)+
-                "\nEnded in state: "+str(nextState)+
-                "\nGot reward: "+str(reward)+"\n")
+        message(
+            (
+                (
+                    (
+                        (f"Started in state: {str(state)}" + "\nTook action: ")
+                        + str(action)
+                        + "\nEnded in state: "
+                    )
+                    + str(nextState)
+                    + "\nGot reward: "
+                )
+                + str(reward)
+                + "\n"
+            )
+        )
         # UPDATE LEARNER
         if 'observeTransition' in dir(agent):
             agent.observeTransition(state, action, nextState, reward)

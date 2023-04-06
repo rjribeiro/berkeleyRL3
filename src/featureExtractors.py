@@ -38,7 +38,7 @@ class CoordinateExtractor(FeatureExtractor):
         feats[state] = 1.0
         feats['x=%d' % state[0]] = 1.0
         feats['y=%d' % state[0]] = 1.0
-        feats['action=%s' % action] = 1.0
+        feats[f'action={action}'] = 1.0
         return feats
 
 def closestFood(pos, food, walls):
@@ -58,8 +58,7 @@ def closestFood(pos, food, walls):
             return dist
         # otherwise spread out from the location to its neighbours
         nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
-        for nbr_x, nbr_y in nbrs:
-            fringe.append((nbr_x, nbr_y, dist+1))
+        fringe.extend((nbr_x, nbr_y, dist+1) for nbr_x, nbr_y in nbrs)
     # no food found
     return None
 

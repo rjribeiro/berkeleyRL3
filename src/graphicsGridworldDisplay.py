@@ -92,11 +92,11 @@ def drawNullValues(gridworld, currentState = None, message = ''):
         for y in range(grid.height):
             state = (x, y)
             gridType = grid[x][y]
-            isExit = (str(gridType) != gridType)
             isCurrent = (currentState == state)
             if gridType == '#':
                 drawSquare(x, y, 0, 0, 0, None, None, True, False, isCurrent)
             else:
+                isExit = (str(gridType) != gridType)
                 drawNullSquare(gridworld.grid, x, y, False, isExit, isCurrent)
     pos = to_screen(((grid.width - 1.0) / 2.0, - 0.8))
     text( pos, TEXT_COLOR, message, "Courier", -32, "bold", "c")
@@ -112,7 +112,6 @@ def drawValues(gridworld, values, policy, currentState = None, message = 'State 
         for y in range(grid.height):
             state = (x, y)
             gridType = grid[x][y]
-            isExit = (str(gridType) != gridType)
             isCurrent = (currentState == state)
             if gridType == '#':
                 drawSquare(x, y, 0, 0, 0, None, None, True, False, isCurrent)
@@ -125,6 +124,7 @@ def drawValues(gridworld, values, policy, currentState = None, message = 'State 
                 if action not in actions and 'exit' in actions:
                     action = 'exit'
                 valString = '%.2f' % value
+                isExit = (str(gridType) != gridType)
                 drawSquare(x, y, value, minValue, maxValue, valString, action, False, isExit, isCurrent)
     pos = to_screen(((grid.width - 1.0) / 2.0, - 0.8))
     text( pos, TEXT_COLOR, message, "Courier", -32, "bold", "c")
@@ -144,9 +144,9 @@ def drawQValues(gridworld, qValues, currentState = None, message = 'State-Action
             isExit = (str(gridType) != gridType)
             isCurrent = (currentState == state)
             actions = gridworld.getPossibleActions(state)
-            if actions == None or len(actions) == 0:
+            if actions is None or len(actions) == 0:
                 actions = [None]
-            bestQ = max([qValues[(state, action)] for action in actions])
+            bestQ = max(qValues[(state, action)] for action in actions)
             bestActions = [action for action in actions if qValues[(state, action)] == bestQ]
 
             q = util.Counter()
@@ -299,13 +299,13 @@ def drawSquareQ(x, y, qVals, minVal, maxVal, valStrs, bestActions, isCurrent):
     if isCurrent:
         circle( (screen_x, screen_y), 0.1*GRID_SIZE, LOCATION_COLOR, fillColor=LOCATION_COLOR )
 
+    h = -20
     for action in actions:
         text_color = TEXT_COLOR
         if qVals[action] < max(qVals.values()): text_color = MUTED_TEXT_COLOR
         valStr = ""
         if action in valStrs:
             valStr = valStrs[action]
-        h = -20
         if action == 'north':
             #polygon( (center, nw, ne), wedge_color, filled = 1, smooth = 0)
             text(n, text_color, valStr, "Courier", h, "bold", "n")

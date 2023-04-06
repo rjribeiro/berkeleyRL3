@@ -43,11 +43,10 @@ if _Windows:
     _canvas_tfonts = ['times new roman', 'lucida console']
 else:
     _canvas_tfonts = ['times', 'lucidasans-24']
-    pass # XXX need defaults here
 
 def sleep(secs):
     global _root_window
-    if _root_window == None:
+    if _root_window is None:
         time.sleep(secs)
     else:
         _root_window.update_idletasks()
@@ -144,12 +143,11 @@ def _destroy_window(event=None):
 def end_graphics():
     global _root_window, _canvas, _mouse_enabled
     try:
-        try:
-            sleep(1)
-            if _root_window != None:
-                _root_window.destroy()
-        except SystemExit as e:
-            print('Ending graphics raised an exception:', e)
+        sleep(1)
+        if _root_window != None:
+            _root_window.destroy()
+    except SystemExit as e:
+        print('Ending graphics raised an exception:', e)
     finally:
         _root_window = None
         _canvas = None
@@ -165,9 +163,8 @@ def clear_screen(background=None):
 def polygon(coords, outlineColor, fillColor=None, filled=1, smoothed=1, behind=0, width=1):
     c = []
     for coord in coords:
-        c.append(coord[0])
-        c.append(coord[1])
-    if fillColor == None: fillColor = outlineColor
+        c.extend((coord[0], coord[1]))
+    if fillColor is None: fillColor = outlineColor
     if filled == 0: fillColor = ""
     poly = _canvas.create_polygon(c, outline=outlineColor, fill=fillColor, smooth=smoothed, width=width)
     if behind > 0:
@@ -183,10 +180,7 @@ def circle(pos, r, outlineColor, fillColor, endpoints=None, style='pieslice', wi
     x, y = pos
     x0, x1 = x - r - 1, x + r
     y0, y1 = y - r - 1, y + r
-    if endpoints == None:
-        e = [0, 359]
-    else:
-        e = list(endpoints)
+    e = [0, 359] if endpoints is None else list(endpoints)
     while e[0] > e[1]: e[1] = e[1] + 360
 
     return _canvas.create_arc(x0, y0, x1, y1, outline=outlineColor, fill=fillColor,
@@ -209,10 +203,7 @@ def moveCircle(id, pos, r, endpoints=None):
 #    y0, y1 = y - r, y + r + 1
     x0, x1 = x - r - 1, x + r
     y0, y1 = y - r - 1, y + r
-    if endpoints == None:
-        e = [0, 359]
-    else:
-        e = list(endpoints)
+    e = [0, 359] if endpoints is None else list(endpoints)
     while e[0] > e[1]: e[1] = e[1] + 360
 
     edit(id, ('start', e[0]), ('extent', e[1] - e[0]))
@@ -305,7 +296,7 @@ def keys_waiting():
 
 def wait_for_keys():
     keys = []
-    while keys == []:
+    while not keys:
         keys = keys_pressed()
         sleep(0.05)
     return keys
@@ -331,12 +322,9 @@ def move_to(object, x, y=None,
 
     horiz = True
     newCoords = []
-    current_x, current_y = _canvas.coords(object)[0:2] # first point
-    for coord in  _canvas.coords(object):
-        if horiz:
-            inc = x - current_x
-        else:
-            inc = y - current_y
+    current_x, current_y = _canvas.coords(object)[:2]
+    for coord in _canvas.coords(object):
+        inc = x - current_x if horiz else y - current_y
         horiz = not horiz
 
         newCoords.append(coord + inc)
@@ -353,11 +341,8 @@ def move_by(object, x, y=None,
 
     horiz = True
     newCoords = []
-    for coord in  _canvas.coords(object):
-        if horiz:
-            inc = x
-        else:
-            inc = y
+    for coord in _canvas.coords(object):
+        inc = x if horiz else y
         horiz = not horiz
 
         newCoords.append(coord + inc)

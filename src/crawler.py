@@ -61,7 +61,7 @@ class CrawlingRobotEnvironment(environment.Environment):
           current state
         """
 
-        actions = list()
+        actions = []
 
         currArmBucket,currHandBucket = state
         if currArmBucket > 0: actions.append('arm-down')
@@ -226,9 +226,7 @@ class CrawlingRobot:
         handCos, handSin = self.__getCosAndSin(self.handAngle)
         x = self.armLength * armCos + self.handLength * handCos + self.robotWidth
         y = self.armLength * armSin + self.handLength * handSin + self.robotHeight
-        if y < 0:
-            return math.atan(-y/x)
-        return 0.0
+        return math.atan(-y/x) if y < 0 else 0.0
 
 
     ## You shouldn't need methods below here
@@ -251,15 +249,15 @@ class CrawlingRobot:
         y = self.armLength * armSin + self.handLength * handSin + self.robotHeight
 
         if y < 0:
-            if yOld <= 0:
-                return math.sqrt(xOld*xOld + yOld*yOld) - math.sqrt(x*x + y*y)
-            return (xOld - yOld*(x-xOld) / (y - yOld)) - math.sqrt(x*x + y*y)
-        else:
-            if yOld  >= 0:
-                return 0.0
-            return -(x - y * (xOld-x)/(yOld-y)) + math.sqrt(xOld*xOld + yOld*yOld)
-
-        raise RuntimeError('Never Should See This!')
+            return (
+                math.sqrt(xOld * xOld + yOld * yOld) - math.sqrt(x * x + y * y)
+                if yOld <= 0
+                else (xOld - yOld * (x - xOld) / (y - yOld))
+                - math.sqrt(x * x + y * y)
+            )
+        if yOld  >= 0:
+            return 0.0
+        return -(x - y * (xOld-x)/(yOld-y)) + math.sqrt(xOld*xOld + yOld*yOld)
 
     def draw(self, stepCount, stepDelay):
         x1, y1 = self.getRobotPosition()

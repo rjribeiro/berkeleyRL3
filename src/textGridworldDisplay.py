@@ -87,13 +87,13 @@ def prettyPrintValues(gridWorld, values, policy=None, currentState = None):
                 else:
                     text[1] = "|" + ' ' * int((l-1)/2-1) + '*' + ' ' * int((l)/2-1) + "|"
             if action == 'east':
-                text[2] = '  ' + text[2]  + ' >'
-            elif action == 'west':
-                text[2] = '< ' + text[2]  + '  '
+                text[2] = f'  {text[2]} >'
             elif action == 'north':
-                text[0] = ' ' * int(maxLen/2) + '^' +' ' * int(maxLen/2)
+                text[0] = ' ' * (maxLen // 2) + '^' + ' ' * (maxLen // 2)
             elif action == 'south':
-                text[4] = ' ' * int(maxLen/2) + 'v' +' ' * int(maxLen/2)
+                text[4] = ' ' * (maxLen // 2) + 'v' + ' ' * (maxLen // 2)
+            elif action == 'west':
+                text[2] = f'< {text[2]}  '
             newCell = "\n".join(text)
             newRow.append(newCell)
         newRows.append(newRow)
@@ -140,7 +140,7 @@ def prettyPrintNullValues(gridWorld, currentState = None):
             elif grid[x][y] == '#':
                 valString = '\n#####\n#####\n#####\n'
                 valString += ' '*maxLen
-            elif type(grid[x][y]) == float or type(grid[x][y]) == int:
+            elif type(grid[x][y]) in [float, int]:
                 valString = border('%.2f' % float(grid[x][y]))
             else: valString = border('  ')
             pieces = [valString]
@@ -155,13 +155,13 @@ def prettyPrintNullValues(gridWorld, currentState = None):
                     text[1] = "|" + ' ' * int((l-1)/2-1) + '*' + ' ' * int((l)/2-1) + "|"
 
             if action == 'east':
-                text[2] = '  ' + text[2]  + ' >'
-            elif action == 'west':
-                text[2] = '< ' + text[2]  + '  '
+                text[2] = f'  {text[2]} >'
             elif action == 'north':
-                text[0] = ' ' * int(maxLen/2) + '^' +' ' * int(maxLen/2)
+                text[0] = ' ' * (maxLen // 2) + '^' + ' ' * (maxLen // 2)
             elif action == 'south':
-                text[4] = ' ' * int(maxLen/2) + 'v' +' ' * int(maxLen/2)
+                text[4] = ' ' * (maxLen // 2) + 'v' + ' ' * (maxLen // 2)
+            elif action == 'west':
+                text[2] = f'< {text[2]}  '
             newCell = "\n".join(text)
             newRow.append(newCell)
         newRows.append(newRow)
@@ -183,9 +183,9 @@ def prettyPrintQValues(gridWorld, qValues, currentState=None):
         for x in range(grid.width):
             state = (x, y)
             actions = gridWorld.getPossibleActions(state)
-            if actions == None or len(actions) == 0:
+            if actions is None or len(actions) == 0:
                 actions = [None]
-            bestQ = max([qValues[(state, action)] for action in actions])
+            bestQ = max(qValues[(state, action)] for action in actions)
             bestActions = [action for action in actions if qValues[(state, action)] == bestQ]
 
             # display cell
@@ -204,28 +204,22 @@ def prettyPrintQValues(gridWorld, qValues, currentState=None):
                 westString = westString+' '*(eastLen-westLen)
 
             if 'north' in bestActions:
-                northString = '/'+northString+'\\'
+                northString = f'/{northString}' + '\\'
             if 'south' in bestActions:
                 southString = '\\'+southString+'/'
-            if 'east' in bestActions:
-                eastString = ''+eastString+'>'
-            else:
-                eastString = ''+eastString+' '
-            if 'west' in bestActions:
-                westString = '<'+westString+''
-            else:
-                westString = ' '+westString+''
+            eastString = f'{eastString}>' if 'east' in bestActions else f'{eastString} '
+            westString = f'<{westString}' if 'west' in bestActions else f' {westString}'
             if 'exit' in bestActions:
-                exitString = '[ '+exitString+' ]'
+                exitString = f'[ {exitString} ]'
 
 
-            ewString = westString + "     " + eastString
+            ewString = f"{westString}     {eastString}"
             if state == currentState:
-                ewString = westString + "  *  " + eastString
+                ewString = f"{westString}  *  {eastString}"
             if state == gridWorld.getStartState():
-                ewString = westString + "  S  " + eastString
+                ewString = f"{westString}  S  {eastString}"
             if state == currentState and state == gridWorld.getStartState():
-                ewString = westString + " S:* " + eastString
+                ewString = f"{westString} S:* {eastString}"
 
             text = [northString, "\n"+exitString, ewString, ' '*maxLen+"\n", southString]
 
@@ -247,7 +241,13 @@ def prettyPrintQValues(gridWorld, qValues, currentState=None):
 
 def border(text):
     length = len(text)
-    pieces = ['-' * (length+2), '|'+' ' * (length+2)+'|', ' | '+text+' | ', '|'+' ' * (length+2)+'|','-' * (length+2)]
+    pieces = [
+        '-' * (length + 2),
+        '|' + ' ' * (length + 2) + '|',
+        f' | {text} | ',
+        '|' + ' ' * (length + 2) + '|',
+        '-' * (length + 2),
+    ]
     return '\n'.join(pieces)
 
 # INDENTING CODE
@@ -277,12 +277,13 @@ def indent(rows, hasHeader=False, headerChar='-', delim=' | ', justify='left',
     def rowWrapper(row):
         newRows = [wrapfunc(item).split('\n') for item in row]
         return [[substr or '' for substr in item] for item in list(*newRows)]
+
     # break each logical row into one or more physical ones
     logicalRows = [rowWrapper(row) for row in rows]
     # columns of physical rows
     columns = list(*reduce(operator.add,logicalRows))
     # get the maximum of each column by the string length of its items
-    maxWidths = [max([len(str(item)) for item in column]) for column in columns]
+    maxWidths = [max(len(str(item)) for item in column) for column in columns]
     rowSeparator = headerChar * (len(prefix) + len(postfix) + sum(maxWidths) + \
                                  len(delim)*(len(maxWidths)-1))
     # select the appropriate justify method

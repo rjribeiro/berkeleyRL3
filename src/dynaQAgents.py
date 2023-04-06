@@ -88,11 +88,10 @@ class DynaQAgent(ReinforcementAgent):
         """
         # Pick Action
         legalActions = self.getLegalActions(state)
-        action = None
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
-        return action
+        return None
 
     def update(self, state, action, nextState, reward):
         """

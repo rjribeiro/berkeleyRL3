@@ -24,7 +24,7 @@ import sys
 class Question(object):
 
     def raiseNotDefined(self):
-        print('Method not implemented: %s' % inspect.stack()[1][3])
+        print(f'Method not implemented: {inspect.stack()[1][3]}')
         sys.exit(1)
 
     def __init__(self, questionDict, display):
@@ -93,9 +93,7 @@ class Q6PartialCreditQuestion(Question):
     def execute(self, grades):
         grades.assignZeroCredit()
 
-        results = []
-        for _, f in self.testCases:
-            results.append(f(grades))
+        results = [f(grades) for _, f in self.testCases]
         if False in results:
             grades.assignZeroCredit()
 
@@ -128,7 +126,7 @@ class NumberPassedQuestion(Question):
 class TestCase(object):
 
     def raiseNotDefined(self):
-        print('Method not implemented: %s' % inspect.stack()[1][3])
+        print(f'Method not implemented: {inspect.stack()[1][3]}')
         sys.exit(1)
 
     def getPath(self):
@@ -157,15 +155,15 @@ class TestCase(object):
     # to get a nice hierarchical project - question - test structure,
     # then these should be moved into Question proper.
     def testPass(self, grades):
-        grades.addMessage('PASS: %s' % (self.path,))
+        grades.addMessage(f'PASS: {self.path}')
         for line in self.messages:
-            grades.addMessage('    %s' % (line,))
+            grades.addMessage(f'    {line}')
         return True
 
     def testFail(self, grades):
-        grades.addMessage('FAIL: %s' % (self.path,))
+        grades.addMessage(f'FAIL: {self.path}')
         for line in self.messages:
-            grades.addMessage('    %s' % (line,))
+            grades.addMessage(f'    {line}')
         return False
 
     # This should really be question level?
@@ -175,12 +173,14 @@ class TestCase(object):
         extraCredit = max(0, points - maxPoints)
         regularCredit = points - extraCredit
 
-        grades.addMessage('%s: %s (%s of %s points)' % ("PASS" if points >= maxPoints else "FAIL", self.path, regularCredit, maxPoints))
+        grades.addMessage(
+            f'{"PASS" if points >= maxPoints else "FAIL"}: {self.path} ({regularCredit} of {maxPoints} points)'
+        )
         if extraCredit > 0:
-            grades.addMessage('EXTRA CREDIT: %s points' % (extraCredit,))
+            grades.addMessage(f'EXTRA CREDIT: {extraCredit} points')
 
         for line in self.messages:
-            grades.addMessage('    %s' % (line,))
+            grades.addMessage(f'    {line}')
 
         return True
 

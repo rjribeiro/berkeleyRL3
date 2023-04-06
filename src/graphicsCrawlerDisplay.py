@@ -198,7 +198,7 @@ class Application:
 
     def exit(self):
         self.running = False
-        for i in range(5):
+        for _ in range(5):
             if not self.stopped:
                 time.sleep(0.1)
         try:
@@ -219,7 +219,7 @@ class Application:
             actions = self.robotEnvironment.getPossibleActions(state)
             print('Reset!')
         action = self.learner.getAction(state)
-        if action == None:
+        if action is None:
             raise RuntimeError('None action returned: Code Not Complete')
         nextState, reward = self.robotEnvironment.doAction(action)
         self.learner.observeTransition(state, action, nextState, reward)
@@ -240,7 +240,7 @@ class Application:
         angleMin, angleMax = self.robot.getMinAndMaxAngle()
         velMin, velMax = self.robot.getMinAndMaxAngleVelocity()
 
-        if not 'animatePolicyBox' in dir(self):
+        if 'animatePolicyBox' not in dir(self):
             self.canvas.create_line(x,y,x+length,y)
             self.canvas.create_line(x+length,y,x+length,y-length)
             self.canvas.create_line(x+length,y-length,x,y-length)
@@ -268,7 +268,7 @@ class Application:
                 else:
                     for action in ('kickLeft','kickRight','doNothing'):
                         qVal = self.learner.getQValue(state, action)
-                        if max == None or qVal > max:
+                        if max is None or qVal > max:
                             max, argMax = qVal, action
                 if argMax != 'unseen':
                     if argMax == 'kickLeft':
@@ -288,8 +288,8 @@ class Application:
     def run(self):
         self.stepCount = 0
         self.learner.startEpisode()
+        minSleep = .01
         while True:
-            minSleep = .01
             tm = max(minSleep, self.tickTime)
             time.sleep(tm)
             self.stepsToSkip = int(tm / self.tickTime) - 1
@@ -297,7 +297,7 @@ class Application:
             if not self.running:
                 self.stopped = True
                 return
-            for i in range(self.stepsToSkip):
+            for _ in range(self.stepsToSkip):
                 self.step()
             self.stepsToSkip = 0
             self.step()

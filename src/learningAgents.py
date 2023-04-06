@@ -169,7 +169,7 @@ class ReinforcementAgent(ValueEstimationAgent):
         gamma    - discount factor
         numTraining - number of training episodes, i.e. no learning after these many episodes
         """
-        if actionFn == None:
+        if actionFn is None:
             actionFn = lambda state: state.getLegalActions()
         self.actionFn = actionFn
         self.episodesSoFar = 0
@@ -208,7 +208,7 @@ class ReinforcementAgent(ValueEstimationAgent):
             This is where we ended up after our last action.
             The simulation should somehow ensure this is called
         """
-        if not self.lastState is None:
+        if self.lastState is not None:
             reward = state.getScore() - self.lastState.getScore()
             self.observeTransition(self.lastState, self.lastAction, state, reward)
         return state
@@ -227,9 +227,9 @@ class ReinforcementAgent(ValueEstimationAgent):
         self.stopEpisode()
 
         # Make sure we have this var
-        if not 'episodeStartTime' in self.__dict__:
+        if 'episodeStartTime' not in self.__dict__:
             self.episodeStartTime = time.time()
-        if not 'lastWindowAccumRewards' in self.__dict__:
+        if 'lastWindowAccumRewards' not in self.__dict__:
             self.lastWindowAccumRewards = 0.0
         self.lastWindowAccumRewards += state.getScore()
 

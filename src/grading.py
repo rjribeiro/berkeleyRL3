@@ -140,14 +140,14 @@ to follow your instructor's guidelines to receive credit on your project.
     Method to format the exception message, this is more complicated because
     we need to html.escape the traceback but wrap the exception in a <pre> tag
     """
-    self.fail('FAIL: Exception raised: %s' % inst)
+    self.fail(f'FAIL: Exception raised: {inst}')
     self.addMessage('')
     for line in traceback.format_exc().split('\n'):
         self.addMessage(line)
 
   def addErrorHints(self, exceptionMap, errorInstance, questionNum):
     typeOf = str(type(errorInstance))
-    questionName = 'q' + questionNum
+    questionName = f'q{questionNum}'
     errorHint = ''
 
     # question specific error hints
@@ -168,36 +168,33 @@ to follow your instructor's guidelines to receive credit on your project.
       self.addMessage(line)
 
   def produceOutput(self):
-    edxOutput = open('edx_response.html', 'w')
-    edxOutput.write("<div>")
+    with open('edx_response.html', 'w') as edxOutput:
+      edxOutput.write("<div>")
 
-    # first sum
-    total_possible = sum(self.maxes.values())
-    total_score = sum(self.points.values())
-    checkOrX = '<span class="incorrect"/>'
-    if (total_score >= total_possible):
-        checkOrX = '<span class="correct"/>'
-    header = """
+      # first sum
+      total_possible = sum(self.maxes.values())
+      total_score = sum(self.points.values())
+      checkOrX = '<span class="incorrect"/>'
+      if (total_score >= total_possible):
+          checkOrX = '<span class="correct"/>'
+      header = """
         <h3>
             Total score ({total_score} / {total_possible})
         </h3>
     """.format(total_score = total_score,
-      total_possible = total_possible,
-      checkOrX = checkOrX
-    )
-    edxOutput.write(header)
+        total_possible = total_possible,
+        checkOrX = checkOrX
+      )
+      edxOutput.write(header)
 
-    for q in self.questions:
-      if len(q) == 2:
-          name = q[1]
-      else:
-          name = q
-      checkOrX = '<span class="incorrect"/>'
-      if (self.points[q] == self.maxes[q]):
-        checkOrX = '<span class="correct"/>'
-      #messages = '\n<br/>\n'.join(self.messages[q])
-      messages = "<pre>%s</pre>" % '\n'.join(self.messages[q])
-      output = """
+      for q in self.questions:
+        name = q[1] if len(q) == 2 else q
+        checkOrX = '<span class="incorrect"/>'
+        if (self.points[q] == self.maxes[q]):
+          checkOrX = '<span class="correct"/>'
+        #messages = '\n<br/>\n'.join(self.messages[q])
+        messages = "<pre>%s</pre>" % '\n'.join(self.messages[q])
+        output = """
         <div class="test">
           <section>
           <div class="shortform">
@@ -209,19 +206,17 @@ to follow your instructor's guidelines to receive credit on your project.
         </section>
       </div>
       """.format(q = name,
-        max = self.maxes[q],
-        messages = messages,
-        checkOrX = checkOrX,
-        points = self.points[q]
-      )
-      # print "*** output for Question %s " % q[1]
-      # print output
-      edxOutput.write(output)
-    edxOutput.write("</div>")
-    edxOutput.close()
-    edxOutput = open('edx_grade', 'w')
-    edxOutput.write(str(self.points.totalCount()))
-    edxOutput.close()
+          max = self.maxes[q],
+          messages = messages,
+          checkOrX = checkOrX,
+          points = self.points[q]
+        )
+        # print "*** output for Question %s " % q[1]
+        # print output
+        edxOutput.write(output)
+      edxOutput.write("</div>")
+    with open('edx_grade', 'w') as edxOutput:
+      edxOutput.write(str(self.points.totalCount()))
 
   def fail(self, message, raw=False):
     "Sets sanity check bit to false and outputs a message"
@@ -245,16 +240,16 @@ to follow your instructor's guidelines to receive credit on your project.
 
   def addMessage(self, message, raw=False):
     if not raw:
-        # We assume raw messages, formatted for HTML, are printed separately
-        if self.mute: util.unmutePrint()
-        print('*** ' + message)
-        if self.mute: util.mutePrint()
-        message = html.escape(message)
+      # We assume raw messages, formatted for HTML, are printed separately
+      if self.mute: util.unmutePrint()
+      print(f'*** {message}')
+      if self.mute: util.mutePrint()
+      message = html.escape(message)
     self.messages[self.currentQuestion].append(message)
 
   def addMessageToEmail(self, message):
-    print("WARNING**** addMessageToEmail is deprecated %s" % message)
-    for line in message.split('\n'):
+    print(f"WARNING**** addMessageToEmail is deprecated {message}")
+    for _ in message.split('\n'):
       pass
       #print '%%% ' + line + ' %%%'
       #self.messages[self.currentQuestion].append(line)
